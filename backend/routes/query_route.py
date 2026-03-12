@@ -1,6 +1,6 @@
 from typing import Optional
 import uuid
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Header
 from fastapi.responses import StreamingResponse
 
 from backend.database import chat_repository
@@ -11,9 +11,12 @@ router = APIRouter()
 
 @router.post("/query")
 async def query(
-    token: str = Form(..., description="User identifier / JWT token"),
+    authorization: Optional[str] = Header(None, description="Bearer JWT token"),
+    token: str = Form(..., description="User ID"),
     user_message: str = Form(..., description="The user's query"),
     file: Optional[UploadFile] = File(None, description="Optional PDF or document"),
+    latitude: str = Form("", description="Latitude of user's location"),
+    longitude: str = Form("", description="Longitude of user's location"),
 ):
     """
     Main query endpoint.
@@ -32,7 +35,9 @@ async def query(
     if file and file.filename:
         try:
             file_bytes = await file.read()
-            await file_service.upload_file_to_knowledge(file_bytes, file.filename, token)
+            await file_service.upload_file_to_knowledge(
+                file_bytes, file.filename, token
+            )
         except ValueError as e:
             raise HTTPException(status_code=422, detail=str(e))
         except Exception as e:
@@ -48,10 +53,24 @@ async def query(
     user_msg_id = str(uuid.uuid4())
     agent_msg_id = str(uuid.uuid4())
 
+    print(f"The user query is ${user_message}")
+
+    jwt_token = ""
+    if authorization and authorization.startswith("Bearer "):
+        jwt_token = authorization.split("Bearer ")[1]
+
     async def response_generator():
         full_response = ""
         try:
-            async for chunk in agent_service.stream_agent_response(token, user_message, recent_history, agent_message_id=agent_msg_id):
+            async for chunk in agent_service.stream_agent_response(
+                token,
+                user_message,
+                recent_history,
+                agent_msg_id,
+                jwt_token,
+                latitude=latitude,
+                longitude=longitude,
+            ):
                 full_response += chunk
                 yield chunk
         except Exception as e:
@@ -60,8 +79,12 @@ async def query(
 
         # Persist after stream completes
         try:
-            chat_repository.insert_message(token, "user", user_message, message_id=user_msg_id)
-            chat_repository.insert_message(token, "agent", full_response, message_id=agent_msg_id)
+            chat_repository.insert_message(
+                token, "user", user_message, message_id=user_msg_id
+            )
+            chat_repository.insert_message(
+                token, "agent", full_response, message_id=agent_msg_id
+            )
         except Exception as e:
             yield f"\n[Storage Error]: {e}"
 

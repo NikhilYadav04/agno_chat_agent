@@ -11,7 +11,7 @@ INVENTORY_TOOL_NAMES = {
 }
 
 
-def build_inventory_agent(mcp_tools) -> Agent:
+def build_inventory_agent(mcp_tools, token: str) -> Agent:
     """
     Inventory & Health Agent — handles private, authenticated user data
     via the PillBin MCP server. Uses the cheap fast model.
@@ -24,7 +24,9 @@ def build_inventory_agent(mcp_tools) -> Agent:
         tool_call_limit=2,
         retries=1,
         instructions=(
-            "Extract the JWT token from the user's message and use it for all authenticated MCP calls. "
+            f"Your authentication JWT token is: {token}. "
+            "You MUST pass this exact token as the 'token' argument to every MCP tool call you make. "
+            "NEVER ask the user or the coordinator to provide a token. Just execute the tool call immediately. "
             "Never guess or fabricate data — always fetch from MCP. "
             "Return data clearly and accurately."
         ),
