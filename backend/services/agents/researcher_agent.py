@@ -31,10 +31,15 @@ def build_researcher_agent(token: str) -> Agent:
         tool_call_limit=3,
         retries=2,
         instructions=(
-            "Use your tools smartly: "
-            "1. If the user asks about their own medical reports, test results, or health history, use `search_knowledge_base`. "
-            "2. If the user asks for general medical information, diseases, or drug facts, go straight to `web_search`. "
-            "3. When using web_search, generate short, natural conversational queries (e.g., 'fever medicine dosing for adults') instead of long lists of keywords. "
-            "4. Be concise, factual, and medically responsible. Never diagnose. Always recommend a qualified professional for clinical decisions."
+            """<tools>
+- search_knowledge_base → user's own reports, test results, health history
+- web_search           → general medical info, diseases, drug facts
+  Queries must be short and conversational (e.g. "fever medicine dosing for adults")
+</tools>
+
+<rules>
+- Factual and concise. Never diagnose.
+- Always recommend a qualified professional for clinical decisions.
+</rules>"""
         ),
     )

@@ -17,7 +17,7 @@ def insert_message(token: str, role: str, message: str, message_id: str = None) 
     }
     if message_id:
         data["id"] = message_id
-        
+
     supabase.table(TABLE).insert(data).execute()
 
 
@@ -39,10 +39,10 @@ def fetch_recent(token: str, limit: int = 10) -> List[Dict[str, Any]]:
 def fetch_all(token: str, page: int = 1, limit: int = 20) -> Dict[str, Any]:
     """Fetch paginated conversation history for a token, chronological order."""
     supabase = get_supabase()
-    
+
     # Calculate offset
     offset = (page - 1) * limit
-    
+
     # We use count="exact" to get the total number of records along with the paginated data
     response = (
         supabase.table(TABLE)
@@ -52,11 +52,13 @@ def fetch_all(token: str, page: int = 1, limit: int = 20) -> Dict[str, Any]:
         .range(offset, offset + limit - 1)
         .execute()
     )
-    
+
     # Supabase response object has .data and .count when we ask for count
     return {
         "data": response.data,
-        "total": getattr(response, "count", 0)  # Default fallback if count isn't retrieved
+        "total": getattr(
+            response, "count", 0
+        ),  # Default fallback if count isn't retrieved
     }
 
 

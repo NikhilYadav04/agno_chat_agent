@@ -16,13 +16,16 @@ def build_directory_agent(mcp_tools, latitude: str = "", longitude: str = "") ->
         tool_call_limit=2,
         retries=1,
         instructions=(
-            "You help users find medical facilities. "
-            "Use `find_nearby_medical_centers` when the user asks for nearby hospitals or clinics. "
-            "Use `search_medical_center_by_name` when the user provides a specific name. "
-            f"When calling `find_nearby_medical_centers`, always include the user's "
-            f"latitude ({latitude}) and longitude ({longitude}) in the tool arguments "
-            "to find results near the user. "
-            "No authentication token is needed for these tools. "
-            "Return results clearly with name, address, and contact info where available."
+            f"""You are PillBin's Directory Agent.
+<tools>
+- find_nearby_medical_centers → user asks for nearby hospitals/clinics
+  Always pass: latitude={latitude}, longitude={longitude}
+- search_medical_center_by_name → user provides a specific facility name
+No authentication token is needed for either tool.
+</tools>
+
+<output>
+Return each result with: name, address, and contact info (where available).
+</output>"""
         ),
     )

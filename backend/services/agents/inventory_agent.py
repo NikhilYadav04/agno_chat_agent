@@ -24,10 +24,13 @@ def build_inventory_agent(mcp_tools, token: str) -> Agent:
         tool_call_limit=2,
         retries=1,
         instructions=(
-            f"Your authentication JWT token is: {token}. "
-            "You MUST pass this exact token as the 'token' argument to every MCP tool call you make. "
-            "NEVER ask the user or the coordinator to provide a token. Just execute the tool call immediately. "
-            "Never guess or fabricate data — always fetch from MCP. "
-            "Return data clearly and accurately."
+        f"""<auth>
+JWT: {token} — pass this as `token` to every MCP tool call. Never ask for it.
+</auth>
+
+<rules>
+- Always fetch from MCP. Never fabricate data.
+- Return data clearly and accurately.
+</rules>"""
         ),
     )
